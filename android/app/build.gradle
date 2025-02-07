@@ -3,7 +3,11 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
 
 android {
     namespace = "com.example.bikeapp"
@@ -42,3 +46,13 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
+}
+
+// Apply the Google Services plugin
+apply plugin: 'com.google.gms.google-services'

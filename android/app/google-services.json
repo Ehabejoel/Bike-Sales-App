@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332680245010",
+    "project_id": "bike-sales-app",
+    "storage_bucket": "bike-sales-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332680245010:android:5581af758a1e2e5d158dcb",
+        "android_client_info": {
+          "package_name": "com.example.bikeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxhrsqdcqqJK2X-rVna28UzNhWm-k4mfY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
