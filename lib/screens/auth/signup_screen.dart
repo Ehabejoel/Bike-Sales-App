@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
   @override
   _SignupScreenState createState() => _SignupScreenState();
 }
@@ -92,12 +94,12 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signup,
-                  child: _isLoading
-                      ? CircularProgressIndicator()
-                      : Text('Create Account'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                   ),
+                  child: _isLoading
+                      ? CircularProgressIndicator()
+                      : Text('Create Account'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context),

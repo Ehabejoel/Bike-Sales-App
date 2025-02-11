@@ -16,18 +16,22 @@ import 'models/bike.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-    // Initialize App Check
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug,
-    );
+      // Initialize App Check only after successful Firebase init
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+      );
 
-    print('Firebase initialized successfully'); // Debug print
+      print('Firebase initialized successfully');
+    } else {
+      print('Firebase already initialized');
+    }
   } catch (e) {
-    print('Failed to initialize Firebase: $e'); // Debug print
+    print('Failed to initialize Firebase: $e');
   }
   runApp(const MyApp());
 }

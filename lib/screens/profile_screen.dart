@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'auth/login_screen.dart'; // Update this import
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();

@@ -1,89 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/bike.dart';
 import '../utils/price_formatter.dart';
+import '../services/bike_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  TabController? _tabController; // Make nullable
-  final List<Bike> bikes = [
-    Bike(
-      id: '1',
-      title: 'Mountain Bike Pro',
-      description: 'Professional mountain bike with front suspension',
-      price: 299999,
-      imageUrl: 'assets/images/bike1.jpg',
-      seller: 'John Doe',
-      category: 'Mountain',
-    ),
-    Bike(
-      id: '2',
-      title: 'Electric City Bike',
-      description: 'Urban electric bike with 50km range',
-      price: 799999,
-      imageUrl: 'assets/images/bike2.jpg',
-      seller: 'Sarah Smith',
-      category: 'Electric',
-    ),
-    Bike(
-      id: '3',
-      title: 'BMX Stunt Bike',
-      description: 'Perfect for tricks and stunts',
-      price: 149999,
-      imageUrl: 'assets/images/bike3.jpg',
-      seller: 'Mike Johnson',
-      category: 'BMX',
-    ),
-    Bike(
-      id: '4',
-      title: 'Road Racer X1',
-      description: 'Lightweight carbon frame road bike',
-      price: 899999,
-      imageUrl: 'assets/images/bike4.jpg',
-      seller: 'Emma Wilson',
-      category: 'Road',
-    ),
-    Bike(
-      id: '5',
-      title: 'Electric Mountain Bike',
-      description: 'Powerful electric mountain bike with dual suspension',
-      price: 1299999,
-      imageUrl: 'assets/images/bike5.jpg',
-      seller: 'David Brown',
-      category: 'Electric',
-    ),
-    Bike(
-      id: '6',
-      title: 'BMX Freestyle',
-      description: 'Durable BMX bike for park and street',
-      price: 199999,
-      imageUrl: 'assets/images/bike6.jpg',
-      seller: 'Tom Davis',
-      category: 'BMX',
-    ),
-    Bike(
-      id: '7',
-      title: 'Road Elite',
-      description: 'Professional racing road bike',
-      price: 1499999,
-      imageUrl: 'assets/images/bike7.jpg',
-      seller: 'Lisa Anderson',
-      category: 'Road',
-    ),
-    Bike(
-      id: '8',
-      title: 'Mountain Explorer',
-      description: 'All-terrain mountain bike with premium components',
-      price: 449999,
-      imageUrl: 'assets/images/bike8.jpg',
-      seller: 'Chris Martin',
-      category: 'Mountain',
-    ),
-  ];
-
+  final BikeService _bikeService = BikeService();
+  TabController? _tabController;
   String _searchQuery = '';
   RangeValues _priceRange = RangeValues(0, 1000000);
   bool _isGridView = true;
@@ -104,135 +33,152 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _tabController?.dispose(); // Safely dispose
+    _tabController?.dispose();
     super.dispose();
-  }
-
-  List<Bike> get filteredBikes {
-    return bikes.where((bike) {
-      final matchesSearch = bike.title
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          bike.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesPrice =
-          bike.price >= _priceRange.start && bike.price <= _priceRange.end;
-      final matchesCategory = _tabController?.index == 0 ||
-          bike.category == categories[_tabController?.index ?? 0];
-      return matchesSearch && matchesPrice && matchesCategory;
-    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_tabController == null) {
-      return Center(child: CircularProgressIndicator());
-    }
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            pinned: true,
-            expandedHeight: 120,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue[700]!, Colors.blue[500]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-              title: Text(
-                'Bike Market',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
-                onPressed: () => setState(() => _isGridView = !_isGridView),
-              ),
-              IconButton(
-                icon: Icon(Icons.filter_list),
-                onPressed: () => _showFilterBottomSheet(context),
-              ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search bikes...',
-                      prefixIcon: Icon(Icons.search),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
+      body: StreamBuilder<List<Bike>>(
+        stream: _bikeService.getBikes(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final bikes = snapshot.data ?? [];
+          final filteredBikes = bikes.where((bike) {
+            final matchesSearch =
+                bike.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    bike.description
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase());
+            final matchesPrice = bike.price >= _priceRange.start &&
+                bike.price <= _priceRange.end;
+            final matchesCategory = _tabController?.index == 0 ||
+                bike.category == categories[_tabController?.index ?? 0];
+            return matchesSearch && matchesPrice && matchesCategory;
+          }).toList();
+
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                floating: true,
+                pinned: true,
+                expandedHeight: 120,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[700]!, Colors.blue[500]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                     ),
-                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
+                  title: Text(
+                    'Bike Market',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  labelColor: Colors.blue[700],
-                  unselectedLabelColor: Colors.grey[600],
-                  indicatorColor: Colors.blue[700],
-                  tabs: categories
-                      .map((category) => Tab(text: category))
-                      .toList(),
-                  onTap: (_) => setState(() {}),
+                actions: [
+                  IconButton(
+                    icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
+                    onPressed: () => setState(() => _isGridView = !_isGridView),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.filter_list),
+                    onPressed: () => _showFilterBottomSheet(context),
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search bikes...',
+                          prefixIcon: Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (value) =>
+                            setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      labelColor: Colors.blue[700],
+                      unselectedLabelColor: Colors.grey[600],
+                      indicatorColor: Colors.blue[700],
+                      tabs: categories
+                          .map((category) => Tab(text: category))
+                          .toList(),
+                      onTap: (_) => setState(() {}),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          _isGridView ? _buildGridView() : _buildListView(),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blue[700],
+              ),
+              filteredBikes.isEmpty
+                  ? SliverFillRemaining(
+                      child: Center(
+                        child: Text('No bikes found'),
+                      ),
+                    )
+                  : _isGridView
+                      ? _buildGridView(filteredBikes)
+                      : _buildListView(filteredBikes),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildGridView() {
+  Widget _buildGridView(List<Bike> bikes) {
     return SliverPadding(
       padding: EdgeInsets.all(16.0),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.9, // Increased to make cards shorter
+          childAspectRatio: 0.75, // Adjusted for better proportions
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
         delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildBikeCard(filteredBikes[index]),
-          childCount: filteredBikes.length,
+          (context, index) => _buildBikeCard(bikes[index]),
+          childCount: bikes.length,
         ),
       ),
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<Bike> bikes) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildBikeListItem(filteredBikes[index]),
-        childCount: filteredBikes.length,
+        (context, index) => _buildBikeListItem(bikes[index]),
+        childCount: bikes.length,
       ),
     );
   }
@@ -240,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildBikeCard(Bike bike) {
     return Card(
       elevation: 4,
+      clipBehavior: Clip.antiAlias, // Add this for clean edges
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () =>
@@ -248,48 +195,95 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 4, // Increased image area
-              child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                child: Hero(
-                  tag: 'bike-${bike.id}',
-                  child: Image.asset(
-                    bike.imageUrl,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: Icon(Icons.directions_bike, size: 50),
-                      );
-                    },
-                  ),
+              flex: 6, // Increased image area
+              child: Hero(
+                tag: 'bike-${bike.id}',
+                child: Image.network(
+                  bike.imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $error');
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.directions_bike,
+                                size: 40, color: Colors.grey[400]),
+                            SizedBox(height: 4),
+                            Text(
+                              'No image',
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            Container(
-              padding: EdgeInsets.fromLTRB(8, 4, 8, 4), // Reduced padding
+            Padding(
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     bike.title,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 13, // Slightly reduced font size
+                      fontSize: 14,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 2), // Reduced spacing
+                  SizedBox(height: 4),
                   Text(
                     formatCFA(bike.price),
                     style: TextStyle(
                       color: Colors.blue[700],
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 16,
                     ),
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Colors.blue[100],
+                        child: Text(
+                          bike.sellerName[0],
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.blue[900]),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          bike.sellerName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -313,14 +307,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
               child: Hero(
                 tag: 'bike-${bike.id}',
-                child: Image.asset(
-                  // Changed from Image.network to Image.asset
+                child: Image.network(
                   bike.imageUrl,
                   width: 120,
                   height: 120,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.error, size: 30),
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $error');
+                    return Container(
+                      width: 120,
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error, size: 30),
+                          Text('No image'),
+                        ],
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 120,
+                      height: 120,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -355,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Text(
-                          bike.seller,
+                          bike.sellerName,
                           style: TextStyle(
                             color: Colors.grey[600],
                           ),
@@ -411,13 +432,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Apply Filters'),
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
+                child: Text('Apply Filters'),
               ),
             ],
           ),

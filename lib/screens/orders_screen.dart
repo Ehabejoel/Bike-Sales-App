@@ -4,6 +4,8 @@ import '../utils/price_formatter.dart';
 import 'package:intl/intl.dart';
 
 class OrdersScreen extends StatefulWidget {
+  const OrdersScreen({super.key});
+
   @override
   _OrdersScreenState createState() => _OrdersScreenState();
 }

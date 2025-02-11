@@ -3,6 +3,8 @@ import '../../services/auth_service.dart';
 import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -113,11 +115,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  child:
-                      _isLoading ? CircularProgressIndicator() : Text('Login'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                   ),
+                  child:
+                      _isLoading ? CircularProgressIndicator() : Text('Login'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/signup'),

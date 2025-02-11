@@ -18,9 +18,16 @@ class BikeDetailScreen extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'bike-${bike.id}',
-                child: Image.asset(
+                child: Image.network(
                   bike.imageUrl,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading detail image: $error');
+                    return Container(
+                      color: Colors.grey[300],
+                      child: Icon(Icons.directions_bike, size: 100),
+                    );
+                  },
                 ),
               ),
             ),
@@ -83,9 +90,10 @@ class BikeDetailScreen extends StatelessWidget {
                   SizedBox(height: 8),
                   ListTile(
                     leading: CircleAvatar(
-                      child: Text(bike.seller[0]),
+                      backgroundColor: Colors.blue.shade100,
+                      child: Text(bike.sellerName[0]),
                     ),
-                    title: Text(bike.seller),
+                    title: Text(bike.sellerName),
                     subtitle: Text('Member since 2023'),
                   ),
                 ],
