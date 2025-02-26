@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/sell_screen.dart';
@@ -15,24 +14,16 @@ import 'models/bike.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-
-      // Initialize App Check only after successful Firebase init
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.debug,
-      );
-
-      print('Firebase initialized successfully');
-    } else {
-      print('Firebase already initialized');
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully');
   } catch (e) {
-    print('Failed to initialize Firebase: $e');
+    print('Firebase initialization error: $e');
   }
+
   runApp(const MyApp());
 }
 
@@ -47,38 +38,39 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: StreamBuilder<User?>(
-        stream: AuthService().authStateChanges,
-        builder: (context, AsyncSnapshot<User?> snapshot) {
-          // Add debug prints
-          print('Auth state snapshot: ${snapshot.connectionState}');
-          print('Auth state data: ${snapshot.data?.email}');
-          print('Auth state error: ${snapshot.error}');
-
-          if (snapshot.hasError) {
-            return _buildErrorScreen(context, snapshot.error.toString());
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingScreen();
-          }
-
-          return snapshot.data != null ? MainScreen() : LoginScreen();
-        },
-      ),
+      initialRoute: '/',
       routes: {
+        '/': (context) => _handleAuth(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
         '/home': (context) => MainScreen(),
+        '/profile': (context) => ProfileScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/bike-detail') {
           final bike = settings.arguments as Bike;
           return MaterialPageRoute(
-            builder: (context) => BikeDetailScreen(bike: bike),
+            builder: (context) => BikeDetailScreen(bike: bike), // Removed const
           );
         }
         return null;
+      },
+    );
+  }
+
+  Widget _handleAuth() {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasData) {
+          return MainScreen();
+        }
+
+        return LoginScreen();
       },
     );
   }
@@ -152,7 +144,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? 'Bikes for Sale' : 'Sell a Bike'),
+        title: Text(_getTitle()),
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -183,5 +175,20 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  String _getTitle() {
+    switch (_selectedIndex) {
+      case 0:
+        return 'Home';
+      case 1:
+        return 'Sell';
+      case 2:
+        return 'Orders';
+      case 3:
+        return 'Profile';
+      default:
+        return 'Home';
+    }
   }
 }

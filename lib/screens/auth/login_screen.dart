@@ -26,35 +26,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_isLoading || _debounceTimer?.isActive == true) return;
+    if (_isLoading) return;
 
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
       try {
-        // Clear existing snackbars
-        ScaffoldMessenger.of(context).clearSnackBars();
-
-        await _authService.signInWithEmailAndPassword(
+        final user = await _authService.signInWithEmailAndPassword(
           _emailController.text,
           _passwordController.text,
         );
 
         if (mounted) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Clear navigation stack and go to home
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/home',
-            (route) => false,
-          );
+          Navigator.of(context).pushReplacementNamed('/home');
         }
       } catch (e) {
         if (mounted) {
@@ -62,11 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
             SnackBar(
               content: Text(e.toString()),
               backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
             ),
           );
-          // Clear text fields on error
-          _passwordController.clear();
         }
       } finally {
         if (mounted) {

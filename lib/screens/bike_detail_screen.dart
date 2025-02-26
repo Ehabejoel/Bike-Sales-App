@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
 import '../models/bike.dart';
 import '../utils/price_formatter.dart';
+import '../services/order_service.dart';
 
 class BikeDetailScreen extends StatelessWidget {
   final Bike bike;
+  final OrderService _orderService = OrderService();
 
-  const BikeDetailScreen({super.key, required this.bike});
+  BikeDetailScreen({super.key, required this.bike});
+
+  Future<void> _placeOrder(BuildContext context) async {
+    try {
+      await _orderService.createOrder(bike);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order placed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context); // Close the confirmation dialog
+        Navigator.pushReplacementNamed(
+            context, '/orders'); // Navigate to orders screen
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to place order: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,16 +173,7 @@ class BikeDetailScreen extends StatelessWidget {
                             child: Text('Cancel'),
                           ),
                           TextButton(
-                            onPressed: () {
-                              // Handle order placement
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Order placed successfully!'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            },
+                            onPressed: () => _placeOrder(context),
                             child: Text('Confirm'),
                           ),
                         ],

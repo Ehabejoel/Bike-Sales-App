@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth/login_screen.dart'; // Update this import
+ // Ensure this import is present
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -42,80 +42,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _authService.ensureInitialized(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        return StreamBuilder<User?>(
-          stream: _authService.authStateChanges,
-          builder: (context, snapshot) {
-            print('Profile auth state: ${snapshot.data?.email}');
+          final user = snapshot.data;
+          if (user == null) {
+            return const Center(child: Text('Not logged in'));
+          }
 
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final user = snapshot.data ?? _authService.currentUser;
-            if (user == null) {
-              print('No user found, redirecting to sign in');
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        LoginScreen(), // Update this reference
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.person),
                   ),
-                  (route) => false,
-                );
-              });
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return Scaffold(
-              body: SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Profile',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      SizedBox(height: 24),
-                      ListTile(
-                        leading: CircleAvatar(
-                          child: Icon(Icons.person),
-                        ),
-                        title: Text(user.email ?? 'No email'),
-                        subtitle: Text(
-                          'Member since ${user.metadata.creationTime?.toString() ?? 'N/A'}',
-                        ),
-                      ),
-                      Divider(),
-                      ListTile(
-                        leading: Icon(Icons.exit_to_app),
-                        title: Text('Sign Out'),
-                        trailing: _isSigningOut
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : null,
-                        onTap: _isSigningOut ? null : () => _signOut(context),
-                      ),
-                    ],
-                  ),
+                  title: Text(user.email ?? 'No email'),
                 ),
-              ),
-            );
-          },
-        );
-      },
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.exit_to_app),
+                  title: const Text('Sign Out'),
+                  trailing: _isSigningOut
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _isSigningOut ? null : () => _signOut(context),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

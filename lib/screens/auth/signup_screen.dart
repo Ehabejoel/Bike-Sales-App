@@ -16,27 +16,40 @@ class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
 
-  Future<void> _signup() async {
-    if (_formKey.currentState!.validate()) {
-      if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwords do not match')),
-        );
-        return;
-      }
+  Future<void> _signUp() async {
+    if (_isLoading) return;
 
+    if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+
       try {
-        await _authService.createUserWithEmailAndPassword(
+        final user = await _authService.createUserWithEmailAndPassword(
           _emailController.text,
           _passwordController.text,
         );
-        Navigator.of(context).pushReplacementNamed('/home');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -93,7 +106,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _signup,
+                  onPressed: _isLoading ? null : _signUp,
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                   ),

@@ -6,8 +6,8 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function isOwner(sellerId) {
-      return request.auth.uid == sellerId;
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
     // Default: deny all
@@ -15,13 +15,35 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Orders collection rules
+    match /orders/{orderId} {
+      allow create: if isAuthenticated() 
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      
+      allow read: if isAuthenticated() 
+        && (request.auth.uid == resource.data.buyerId 
+        || request.auth.uid == resource.data.sellerId);
+        
+      allow update: if isAuthenticated()
+        && (request.auth.uid == resource.data.buyerId 
+        || request.auth.uid == resource.data.sellerId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status']);
+    }
+
     // Bikes collection rules
     match /bikes/{bikeId} {
-      allow read: if true;  // Anyone can read bike listings
-      allow create: if isAuthenticated() 
-        && request.resource.data.sellerId == request.auth.uid;  // Creator must be authenticated and use their uid
+      allow read: if true;
+      allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() 
-        && isOwner(resource.data.sellerId);  // Only owner can modify or delete
+        && request.auth.uid == resource.data.sellerId;
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
     }
   }
 }
