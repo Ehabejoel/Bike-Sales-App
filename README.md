@@ -26,3 +26,17 @@ A Flutter-based marketplace application for buying and selling bikes in Cameroon
 ### Installation
 
 1. Clone the repository:
+
+### Setting up Firebase
+
+1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Add your Android/iOS app:
+   - Android: Use package name `com.example.bikesalesapp`
+   - iOS: Use bundle ID `com.example.bikesalesapp`
+3. Download and add the configuration files:
+   - Android: `google-services.json` to `android/app/`
+   - iOS: `GoogleService-Info.plist` to `ios/Runner/`
+
+### Environment Variables
+
+Create a `.env` file in the project root:
