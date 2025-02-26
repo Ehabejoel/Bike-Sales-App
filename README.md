@@ -1,16 +1,28 @@
-# bikeapp
+# Bike Sales App
 
-A new Flutter project.
+A Flutter-based marketplace application for buying and selling bikes in Cameroon.
+
+## Features
+
+- **User Authentication**: Secure login and signup functionality using Firebase Auth
+- **Bike Listings**: Browse, search, and filter available bikes
+- **Categories**: Filter bikes by categories (Mountain, Road, Electric, BMX)
+- **Grid/List View**: Toggle between different viewing layouts
+- **Real-time Updates**: Live updates using Firebase Realtime Database
+- **Price Filtering**: Filter bikes by price range
+- **Profile Management**: User profile and listings management
+- **Order Tracking**: Track bike purchase orders
+- **Image Upload**: Upload and manage bike images
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter SDK (2.0 or higher)
+- Firebase account
+- Android Studio or VS Code
+- Git
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository:
